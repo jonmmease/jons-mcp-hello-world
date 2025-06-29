@@ -10,8 +10,6 @@ The Jons MCP Hello World server provides tools for generating greetings in multi
 
 - **Multi-language greetings**: Generate hello messages in 9 different languages
 - **Customizable names**: Greet anyone by name
-- **Template support**: Create custom greetings with template strings
-- **Configuration support**: Customize defaults via JSON configuration
 
 ## Installation
 
@@ -36,45 +34,12 @@ uv run jons-mcp-hello-world
 uvx --from git+https://github.com/jonmmease/jons-mcp-hello-world jons-mcp-hello-world
 ```
 
-### With Claude Code
+### Adding to Claude Code as MCP Server
 
-Add to your Claude Code configuration:
+To use this with Claude Code, add it using the CLI:
 
-```json
-{
-  "mcpServers": {
-    "jons-mcp-hello-world": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/jonmmease/jons-mcp-hello-world",
-        "jons-mcp-hello-world"
-      ]
-    }
-  }
-}
-```
-
-## Configuration
-
-Create a `hello-config.json` file in your working directory:
-
-```json
-{
-  "greeting_prefix": "Hello",
-  "default_name": "World",
-  "available_languages": {
-    "en": "Hello",
-    "es": "Hola",
-    "fr": "Bonjour",
-    "de": "Hallo",
-    "it": "Ciao",
-    "pt": "Olá",
-    "ru": "Привет",
-    "ja": "こんにちは",
-    "zh": "你好"
-  }
-}
+```bash
+claude mcp add jons-mcp-hello-world uvx -- --from git+https://github.com/jonmmease/jons-mcp-hello-world jons-mcp-hello-world
 ```
 
 ## Tools
@@ -124,38 +89,6 @@ List all available languages for greetings.
 }
 ```
 
-### custom_greeting
-
-Create a custom greeting using a template.
-
-**Parameters:**
-- `template`: Template string with {name} and other {variables}
-- `name` (optional): Name to use in template
-- `variables` (optional): Additional template variables
-
-**Example:**
-```json
-{
-  "template": "Welcome {name} to {place}!",
-  "name": "Bob",
-  "variables": {
-    "place": "MCP Server"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "greeting": "Welcome Bob to MCP Server!",
-  "template": "Welcome {name} to {place}!",
-  "substitutions": {
-    "name": "Bob",
-    "place": "MCP Server"
-  }
-}
-```
-
 ## Development
 
 ### Setup
@@ -175,9 +108,27 @@ uv pip install -e ".[dev,test]"
 
 ### Running Tests
 
+Using uv to run tests with the virtual environment:
+
 ```bash
-pytest
+# Run all tests
+uv run pytest
+
+# Run tests with verbose output
+uv run pytest -v
+
+# Run a specific test file
+uv run pytest tests/test_hello.py
+
+# Run tests with coverage
+uv run pytest --cov=src
 ```
+
+The test suite includes examples of:
+- Importing functions and constants from the module
+- Testing the `hello` function with various parameters
+- Testing the `list_languages` function
+- Verifying all language translations work correctly
 
 ### Code Quality
 
@@ -193,13 +144,11 @@ ruff check src tests
 
 The server follows the FastMCP pattern:
 
-1. **Configuration**: Loaded from `hello-config.json` with sensible defaults
-2. **Tools**: Three tools demonstrating different patterns:
+1. **Tools**: Two tools demonstrating different patterns:
    - `hello`: Basic tool with optional parameters
    - `list_languages`: Simple query tool
-   - `custom_greeting`: Advanced tool with error handling
-3. **Logging**: Minimal logging to avoid MCP protocol interference
-4. **Error Handling**: Graceful shutdown and error reporting
+2. **Logging**: Minimal logging to avoid MCP protocol interference
+3. **Error Handling**: Graceful shutdown and error reporting
 
 ## Troubleshooting
 
@@ -207,11 +156,6 @@ The server follows the FastMCP pattern:
 - Ensure you have Python 3.10+ installed
 - Check that all dependencies are installed: `uv pip install -e .`
 - Look for error messages in stderr output
-
-### Configuration not loading
-- Verify `hello-config.json` is in the working directory
-- Check JSON syntax is valid
-- Review server logs for configuration errors
 
 ## License
 

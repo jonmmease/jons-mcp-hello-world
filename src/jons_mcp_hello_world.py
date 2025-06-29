@@ -7,10 +7,7 @@ import os
 import logging
 import atexit
 import signal
-import json
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, field
-from pathlib import Path
+from typing import Dict, Any, Optional
 from mcp.server.fastmcp import FastMCP
 
 # Configure logging - reduce to WARNING to avoid MCP protocol interference
@@ -24,39 +21,20 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("jons-mcp-hello-world")
 
 
-@dataclass
-class Config:
-    """Configuration for Hello MCP server"""
-    greeting_prefix: str = "Hello"
-    default_name: str = "World"
-    available_languages: Dict[str, str] = field(default_factory=lambda: {
-        "en": "Hello",
-        "es": "Hola",
-        "fr": "Bonjour",
-        "de": "Hallo",
-        "it": "Ciao",
-        "pt": "Olá",
-        "ru": "Привет",
-        "ja": "こんにちは",
-        "zh": "你好"
-    })
-
-
-def load_config() -> Config:
-    """Load configuration from config.json if it exists"""
-    config_path = Path("hello-config.json")
-    if config_path.exists():
-        try:
-            with open(config_path) as f:
-                data = json.load(f)
-            return Config(**data)
-        except Exception as e:
-            logger.warning(f"Failed to load config: {e}")
-    return Config()
-
-
-# Global config instance
-config = load_config()
+# Default configuration values
+DEFAULT_NAME = "World"
+GREETING_PREFIX = "Hello"
+AVAILABLE_LANGUAGES = {
+    "en": "Hello",
+    "es": "Hola",
+    "fr": "Bonjour",
+    "de": "Hallo",
+    "it": "Ciao",
+    "pt": "Olá",
+    "ru": "Привет",
+    "ja": "こんにちは",
+    "zh": "你好"
+}
 
 
 @mcp.tool()
@@ -76,13 +54,13 @@ def hello(
         A dictionary containing the greeting and metadata
     """
     # Use default name if not provided
-    target_name = name or config.default_name
+    target_name = name or DEFAULT_NAME
     
     # Determine greeting based on language
-    if language and language in config.available_languages:
-        greeting_word = config.available_languages[language]
+    if language and language in AVAILABLE_LANGUAGES:
+        greeting_word = AVAILABLE_LANGUAGES[language]
     else:
-        greeting_word = config.greeting_prefix
+        greeting_word = GREETING_PREFIX
     
     # Build the greeting
     greeting = f"{greeting_word}, {target_name}!"
@@ -107,51 +85,9 @@ def list_languages() -> Dict[str, Any]:
         A dictionary containing available languages and their greetings
     """
     return {
-        "languages": config.available_languages,
-        "count": len(config.available_languages)
+        "languages": AVAILABLE_LANGUAGES,
+        "count": len(AVAILABLE_LANGUAGES)
     }
-
-
-@mcp.tool()
-def custom_greeting(
-    template: str,
-    name: Optional[str] = None,
-    variables: Optional[Dict[str, str]] = None
-) -> Dict[str, Any]:
-    """Create a custom greeting using a template.
-    
-    Args:
-        template: A template string with {name} and other {variables}
-        name: The name to use in the template
-        variables: Additional variables to substitute in the template
-    
-    Returns:
-        A dictionary containing the formatted greeting
-    """
-    # Prepare substitution dictionary
-    subs = {"name": name or config.default_name}
-    if variables:
-        subs.update(variables)
-    
-    try:
-        # Format the template
-        greeting = template.format(**subs)
-        return {
-            "greeting": greeting,
-            "template": template,
-            "substitutions": subs
-        }
-    except KeyError as e:
-        return {
-            "error": f"Missing variable in template: {e}",
-            "template": template,
-            "available_variables": list(subs.keys())
-        }
-    except Exception as e:
-        return {
-            "error": f"Template formatting error: {str(e)}",
-            "template": template
-        }
 
 
 def cleanup():

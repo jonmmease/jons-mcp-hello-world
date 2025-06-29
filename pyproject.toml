@@ -38,7 +38,7 @@ dev = [
 ]
 
 [project.scripts]
-jons-mcp-hello-world = "src.hello_mcp:main"
+jons-mcp-hello-world = "src.jons_mcp_hello_world:main"
 
 [project.urls]
 Homepage = "https://github.com/jonmmease/jons-mcp-hello-world"
